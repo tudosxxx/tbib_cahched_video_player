@@ -1,4 +1,4 @@
-import 'package:tbib_cached_video_player/cached_video_player.dart';
+import 'package:tbib_cached_video_player/tbib_cached_video_player.dart';
 import 'package:tbib_cached_video_player/src/sub_rip.dart';
 import 'package:flutter_test/flutter_test.dart';
 
