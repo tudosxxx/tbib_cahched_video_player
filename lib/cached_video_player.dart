@@ -222,6 +222,21 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         httpHeaders = const {},
         super(VideoPlayerValue(duration: Duration.zero));
 
+  /// Constructs a [VideoPlayerController] playing a video from a contentUri.
+  ///
+  /// This will load the video from the input content-URI.
+  /// This is supported on Android only.
+  VideoPlayerController.contentUri(Uri contentUri,
+      {this.closedCaptionFile, this.videoPlayerOptions})
+      : assert(defaultTargetPlatform == TargetPlatform.android,
+            'VideoPlayerController.contentUri is only supported on Android.'),
+        dataSource = contentUri.toString(),
+        dataSourceType = DataSourceType.contentUri,
+        package = null,
+        formatHint = null,
+        httpHeaders = const {},
+        super(VideoPlayerValue(duration: Duration.zero));
+
   /// The URI to the video file. This will be in different formats depending on
   /// the [DataSourceType] of the original video.
   final String dataSource;
@@ -334,8 +349,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyPlayPause();
           break;
         case VideoEventType.completed:
-          value = value.copyWith(isPlaying: false, position: value.duration);
-          _timer?.cancel();
+          // In this case we need to stop _timer, set isPlaying=false, and
+          // position=value.duration. Instead of setting the values directly,
+          // we use pause() and seekTo() to ensure the platform stops playing
+          // and seeks to the last frame of the video.
+          pause().then((void pauseResult) => seekTo(value.duration));
           break;
         case VideoEventType.bufferingUpdate:
           value = value.copyWith(buffered: event.buffered);
@@ -352,7 +370,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     }
 
     if (closedCaptionFile != null) {
-      _closedCaptionFile ??= await closedCaptionFile;
+      if (_closedCaptionFile == null) {
+        _closedCaptionFile = await closedCaptionFile;
+      }
       value = value.copyWith(caption: _getCaptionAt(value.position));
     }
 
@@ -389,10 +409,15 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// Starts playing the video.
   ///
+  /// If the video is at the end, this method starts playing from the beginning.
+  ///
   /// This method returns a future that completes as soon as the "play" command
   /// has been sent to the platform, not when playback itself is totally
   /// finished.
   Future<void> play() async {
+    if (value.position == value.duration) {
+      await seekTo(const Duration());
+    }
     value = value.copyWith(isPlaying: true);
     await _applyPlayPause();
   }
@@ -411,14 +436,14 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   Future<void> _applyLooping() async {
-    if (!value.isInitialized || _isDisposed) {
+    if (_isDisposedOrNotInitialized) {
       return;
     }
     await _videoPlayerPlatform.setLooping(_textureId, value.isLooping);
   }
 
   Future<void> _applyPlayPause() async {
-    if (!value.isInitialized || _isDisposed) {
+    if (_isDisposedOrNotInitialized) {
       return;
     }
     if (value.isPlaying) {
@@ -451,14 +476,14 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   Future<void> _applyVolume() async {
-    if (!value.isInitialized || _isDisposed) {
+    if (_isDisposedOrNotInitialized) {
       return;
     }
     await _videoPlayerPlatform.setVolume(_textureId, value.volume);
   }
 
   Future<void> _applyPlaybackSpeed() async {
-    if (!value.isInitialized || _isDisposed) {
+    if (_isDisposedOrNotInitialized) {
       return;
     }
 
@@ -487,7 +512,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// If [moment] is outside of the video's full range it will be automatically
   /// and silently clamped.
   Future<void> seekTo(Duration position) async {
-    if (_isDisposed) {
+    if (_isDisposedOrNotInitialized) {
       return;
     }
     if (position > value.duration) {
@@ -568,6 +593,17 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     value = value.copyWith(position: position);
     value = value.copyWith(caption: _getCaptionAt(position));
   }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    // Prevent VideoPlayer from causing an exception to be thrown when attempting to
+    // remove its own listener after the controller has already been disposed.
+    if (!_isDisposed) {
+      super.removeListener(listener);
+    }
+  }
+
+  bool get _isDisposedOrNotInitialized => _isDisposed || !value.isInitialized;
 }
 
 class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
@@ -577,7 +613,7 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
   final VideoPlayerController _controller;
 
   void initialize() {
-    WidgetsBinding.instance!.addObserver(this);
+    _ambiguate(WidgetsBinding.instance)!.addObserver(this);
   }
 
   @override
@@ -597,19 +633,18 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
   }
 
   void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
+    _ambiguate(WidgetsBinding.instance)!.removeObserver(this);
   }
 }
 
 /// Widget that displays the video controlled by [controller].
 class VideoPlayer extends StatefulWidget {
   /// Uses the given [controller] for all video rendered in this widget.
+  VideoPlayer(this.controller);
 
   /// The [VideoPlayerController] responsible for the video being rendered in
   /// this widget.
   final VideoPlayerController controller;
-
-  const VideoPlayer(this.controller, {Key? key}) : super(key: key);
 
   @override
   _VideoPlayerState createState() => _VideoPlayerState();
@@ -703,7 +738,7 @@ class VideoProgressColors {
 }
 
 class _VideoScrubber extends StatefulWidget {
-  const _VideoScrubber({
+  _VideoScrubber({
     required this.child,
     required this.controller,
   });
@@ -777,14 +812,12 @@ class VideoProgressIndicator extends StatefulWidget {
   /// Defaults will be used for everything except [controller] if they're not
   /// provided. [allowScrubbing] defaults to false, and [padding] will default
   /// to `top: 5.0`.
-
-  const VideoProgressIndicator(
+  VideoProgressIndicator(
     this.controller, {
-    Key? key,
     this.colors = const VideoProgressColors(),
     required this.allowScrubbing,
     this.padding = const EdgeInsets.only(top: 5.0),
-  }) : super(key: key);
+  });
 
   /// The [VideoPlayerController] that actually associates a video with this
   /// widget.
@@ -913,11 +946,12 @@ class ClosedCaption extends StatelessWidget {
   /// Creates a a new closed caption, designed to be used with
   /// [VideoPlayerValue.caption].
   ///
-  /// If [text] is null, nothing will be displayed.
+  /// If [text] is null or empty, nothing will be displayed.
   const ClosedCaption({Key? key, this.text, this.textStyle}) : super(key: key);
 
   /// The text that will be shown in the closed caption, or null if no caption
   /// should be shown.
+  /// If the text is empty the caption will not be shown.
   final String? text;
 
   /// Specifies how the text in the closed caption should look.
@@ -928,31 +962,39 @@ class ClosedCaption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = this.text;
+    if (text == null || text.isEmpty) {
+      return SizedBox.shrink();
+    }
+
     final TextStyle effectiveTextStyle = textStyle ??
         DefaultTextStyle.of(context).style.copyWith(
               fontSize: 36.0,
               color: Colors.white,
             );
 
-    if (text == null) {
-      return const SizedBox.shrink();
-    }
-
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 24.0),
+        padding: EdgeInsets.only(bottom: 24.0),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xB8000000),
+            color: Color(0xB8000000),
             borderRadius: BorderRadius.circular(2.0),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0),
-            child: Text(text!, style: effectiveTextStyle),
+            padding: EdgeInsets.symmetric(horizontal: 2.0),
+            child: Text(text, style: effectiveTextStyle),
           ),
         ),
       ),
     );
   }
 }
+
+/// This allows a value of type T or T? to be treated as a value of type T?.
+///
+/// We use this so that APIs that have become non-nullable can still be used
+/// with `!` and `?` on the stable branch.
+// TODO(ianh): Remove this once we roll stable in late 2021.
+T? _ambiguate<T>(T? value) => value;

@@ -1,9 +1,8 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'sub_rip.dart';
 export 'sub_rip.dart' show SubRipCaptionFile;
+
+import 'web_vtt.dart';
+export 'web_vtt.dart' show WebVTTCaptionFile;
 
 /// A structured representation of a parsed closed caption file.
 ///
@@ -15,6 +14,7 @@ export 'sub_rip.dart' show SubRipCaptionFile;
 ///
 /// See:
 /// * [SubRipCaptionFile].
+/// * [WebVTTCaptionFile].
 abstract class ClosedCaptionFile {
   /// The full list of captions from a given file.
   ///
