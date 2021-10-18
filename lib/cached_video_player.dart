@@ -370,9 +370,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     }
 
     if (closedCaptionFile != null) {
-      if (_closedCaptionFile == null) {
-        _closedCaptionFile = await closedCaptionFile;
-      }
+      _closedCaptionFile ??= await closedCaptionFile;
       value = value.copyWith(caption: _getCaptionAt(value.position));
     }
 
@@ -579,6 +577,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       return Caption.none;
     }
 
+    // ignore: todo
     // TODO: This would be more efficient as a binary search.
     for (final caption in _closedCaptionFile!.captions) {
       if (caption.start <= position && caption.end >= position) {
@@ -640,7 +639,7 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
 /// Widget that displays the video controlled by [controller].
 class VideoPlayer extends StatefulWidget {
   /// Uses the given [controller] for all video rendered in this widget.
-  VideoPlayer(this.controller);
+  const VideoPlayer(this.controller, {Key? key}) : super(key: key);
 
   /// The [VideoPlayerController] responsible for the video being rendered in
   /// this widget.
@@ -738,7 +737,7 @@ class VideoProgressColors {
 }
 
 class _VideoScrubber extends StatefulWidget {
-  _VideoScrubber({
+  const _VideoScrubber({
     required this.child,
     required this.controller,
   });
@@ -812,12 +811,13 @@ class VideoProgressIndicator extends StatefulWidget {
   /// Defaults will be used for everything except [controller] if they're not
   /// provided. [allowScrubbing] defaults to false, and [padding] will default
   /// to `top: 5.0`.
-  VideoProgressIndicator(
+  const VideoProgressIndicator(
     this.controller, {
+    Key? key,
     this.colors = const VideoProgressColors(),
     required this.allowScrubbing,
     this.padding = const EdgeInsets.only(top: 5.0),
-  });
+  }) : super(key: key);
 
   /// The [VideoPlayerController] that actually associates a video with this
   /// widget.
@@ -964,7 +964,7 @@ class ClosedCaption extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = this.text;
     if (text == null || text.isEmpty) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     final TextStyle effectiveTextStyle = textStyle ??
@@ -976,14 +976,14 @@ class ClosedCaption extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: EdgeInsets.only(bottom: 24.0),
+        padding: const EdgeInsets.only(bottom: 24.0),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: Color(0xB8000000),
+            color: const Color(0xB8000000),
             borderRadius: BorderRadius.circular(2.0),
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 2.0),
+            padding: const EdgeInsets.symmetric(horizontal: 2.0),
             child: Text(text, style: effectiveTextStyle),
           ),
         ),
@@ -996,5 +996,6 @@ class ClosedCaption extends StatelessWidget {
 ///
 /// We use this so that APIs that have become non-nullable can still be used
 /// with `!` and `?` on the stable branch.
+// ignore: todo
 // TODO(ianh): Remove this once we roll stable in late 2021.
 T? _ambiguate<T>(T? value) => value;

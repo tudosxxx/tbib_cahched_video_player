@@ -64,8 +64,8 @@ void main() {
 
     final Caption firstCaption = parsedFile.captions.single;
     expect(firstCaption.number, 2);
-    expect(firstCaption.start, Duration(seconds: 15));
-    expect(firstCaption.end, Duration(seconds: 17, milliseconds: 74));
+    expect(firstCaption.start, const Duration(seconds: 15));
+    expect(firstCaption.end, const Duration(seconds: 17, milliseconds: 74));
     expect(firstCaption.text, 'This one is valid');
   });
 }

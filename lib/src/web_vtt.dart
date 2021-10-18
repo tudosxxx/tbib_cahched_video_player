@@ -1,5 +1,3 @@
-
-
 import 'dart:convert';
 
 import 'package:html/dom.dart';
@@ -62,6 +60,7 @@ List<Caption> _parseCaptionsFromWebVTTString(String file) {
 
     final String text = captionLines.sublist(hasHeader ? 2 : 1).join('\n');
 
+    // ignore: todo
     // TODO(cyanglaz): Handle special syntax in VTT captions.
     // https://github.com/flutter/flutter/issues/90007.
     final String textWithoutFormat = _extractTextFromHtml(text);
@@ -161,6 +160,7 @@ Duration? _parseWebVTTTimestamp(String timestampString) {
 
   List<String> milisecondsStyles = dotSections[1].split(" ");
 
+  // ignore: todo
   // TODO(cyanglaz): Handle caption styles.
   // https://github.com/flutter/flutter/issues/90009.
   // ```dart

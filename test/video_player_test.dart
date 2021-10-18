@@ -141,7 +141,7 @@ void main() {
 
     testWidgets('uses given text and style', (WidgetTester tester) async {
       const String text = 'foo';
-      const TextStyle textStyle = const TextStyle(fontSize: 14.725);
+      const TextStyle textStyle = TextStyle(fontSize: 14.725);
       await tester.pumpWidget(const MaterialApp(
         home: ClosedCaption(
           text: text,
@@ -629,8 +629,8 @@ void main() {
       test('640x480 -> 4:3', () {
         final value = VideoPlayerValue(
           isInitialized: true,
-          size: Size(640, 480),
-          duration: Duration(seconds: 1),
+          size: const Size(640, 480),
+          duration: const Duration(seconds: 1),
         );
         expect(value.aspectRatio, 4 / 3);
       });
@@ -638,7 +638,7 @@ void main() {
       test('no size -> 1.0', () {
         final value = VideoPlayerValue(
           isInitialized: true,
-          duration: Duration(seconds: 1),
+          duration: const Duration(seconds: 1),
         );
         expect(value.aspectRatio, 1.0);
       });
@@ -646,8 +646,8 @@ void main() {
       test('height = 0 -> 1.0', () {
         final value = VideoPlayerValue(
           isInitialized: true,
-          size: Size(640, 0),
-          duration: Duration(seconds: 1),
+          size: const Size(640, 0),
+          duration: const Duration(seconds: 1),
         );
         expect(value.aspectRatio, 1.0);
       });
@@ -655,8 +655,8 @@ void main() {
       test('width = 0 -> 1.0', () {
         final value = VideoPlayerValue(
           isInitialized: true,
-          size: Size(0, 480),
-          duration: Duration(seconds: 1),
+          size: const Size(0, 480),
+          duration: const Duration(seconds: 1),
         );
         expect(value.aspectRatio, 1.0);
       });
@@ -664,8 +664,8 @@ void main() {
       test('negative aspect ratio -> 1.0', () {
         final value = VideoPlayerValue(
           isInitialized: true,
-          size: Size(640, -480),
-          duration: Duration(seconds: 1),
+          size: const Size(640, -480),
+          duration: const Duration(seconds: 1),
         );
         expect(value.aspectRatio, 1.0);
       });
@@ -677,7 +677,7 @@ void main() {
     const Color bufferedColor = Color.fromRGBO(0, 255, 0, 0.5);
     const Color backgroundColor = Color.fromRGBO(255, 255, 0, 0.25);
 
-    final VideoProgressColors colors = VideoProgressColors(
+    const VideoProgressColors colors = VideoProgressColors(
         playedColor: playedColor,
         bufferedColor: bufferedColor,
         backgroundColor: backgroundColor);

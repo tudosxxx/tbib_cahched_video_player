@@ -71,13 +71,13 @@ class _ButterFlyAssetVideoInList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       children: <Widget>[
-        _ExampleCard(title: "Item a"),
-        _ExampleCard(title: "Item b"),
-        _ExampleCard(title: "Item c"),
-        _ExampleCard(title: "Item d"),
-        _ExampleCard(title: "Item e"),
-        _ExampleCard(title: "Item f"),
-        _ExampleCard(title: "Item g"),
+        const _ExampleCard(title: "Item a"),
+        const _ExampleCard(title: "Item b"),
+        const _ExampleCard(title: "Item c"),
+        const _ExampleCard(title: "Item d"),
+        const _ExampleCard(title: "Item e"),
+        const _ExampleCard(title: "Item f"),
+        const _ExampleCard(title: "Item g"),
         Card(
             child: Column(children: <Widget>[
           Column(
@@ -96,11 +96,11 @@ class _ButterFlyAssetVideoInList extends StatelessWidget {
             ],
           ),
         ])),
-        _ExampleCard(title: "Item h"),
-        _ExampleCard(title: "Item i"),
-        _ExampleCard(title: "Item j"),
-        _ExampleCard(title: "Item k"),
-        _ExampleCard(title: "Item l"),
+        const _ExampleCard(title: "Item h"),
+        const _ExampleCard(title: "Item i"),
+        const _ExampleCard(title: "Item j"),
+        const _ExampleCard(title: "Item k"),
+        const _ExampleCard(title: "Item l"),
       ],
     );
   }
@@ -287,13 +287,13 @@ class _ControlsOverlay extends StatelessWidget {
     return Stack(
       children: <Widget>[
         AnimatedSwitcher(
-          duration: Duration(milliseconds: 50),
-          reverseDuration: Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 50),
+          reverseDuration: const Duration(milliseconds: 200),
           child: controller.value.isPlaying
-              ? SizedBox.shrink()
+              ? const SizedBox.shrink()
               : Container(
                   color: Colors.black26,
-                  child: Center(
+                  child: const Center(
                     child: Icon(
                       Icons.play_arrow,
                       color: Colors.white,
